@@ -5,7 +5,7 @@ Module for defining blackjack game objects.
 Todo:
 	* Fill in method functionality
 """
-
+import random
 
 class Card:
 	"""
@@ -13,8 +13,10 @@ class Card:
 
 	Attributes:
 		suit (str): One of four suits.
-		rank (int): Value of card from two through ace.
+		rank (str): Value of card from two through ace.
 	"""
+	suits = ["clubs", "diamonds", "hearts", "spades"]
+	ranks = [None, "ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"]
 
 	def __init__(self, suit=None, rank=None):
 		"""
@@ -22,13 +24,21 @@ class Card:
 
 		Args:
 			suit (str): One of four suits.
-			rank (int): Value of card from two through ace.
+			rank (str): Value of card from two through ace.
 		"""
-		self.suit = suit if suit is not None else self.get_suit()
-		self.rank = rank if rank is not None else self.get_rank()
+		# random_suit/rank is DANGEROUS. Needs fix.
+		self.suit = suit if suit is not None and suit in self.suits else self.random_suit()
+		self.rank = rank if rank is not None and rank in self.ranks else self.random_rank()
+
+	def __str__(self):
+		"""
+		Returns:
+			str: Readable version of card.
+		"""
+		return (self.rank + " of " + self.suit)
 
 	@staticmethod
-	def get_suit():
+	def random_suit():
 		"""
 		Choose a random suit for a card.
 
@@ -36,18 +46,18 @@ class Card:
 			suit (str): One of four suits, randomly chosen.
 
 		"""
-		return ('spade')
+		return random.choice(Card.suits)
 
 	@staticmethod
-	def get_rank():
+	def random_rank():
 		"""
 		Choose a random rank for a card.
 
 		Returns:
-			rank (int): Value of card from two through ace, randomly chosen.
+			rank (str): Value of card from two through ace, randomly chosen.
 
 		"""
-		return (13)
+		return random.choice(Card.ranks[1:])
 
 
 class Player:
@@ -72,18 +82,18 @@ class Player:
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
 		self.hand = hand if hand is not None else False
-	# if not self.dealer:
-	# 	if chips is not None:
-	# 		self.chips = chips
-	# 	else:
-	# 		self.chips = 0
+# if not self.dealer:
+# 	if chips is not None:
+# 		self.chips = chips
+# 	else:
+# 		self.chips = 0
 
 
 def main():
 	"""Executes Blackjack game and concludes run."""
 
-	card1 = Card()
-	print(card1.suit, card1.rank)
+	card1 = Card(rank="422",suit="diamonds")
+	print(card1)
 
 	player1 = Player()
 	print(player1.chips, player1.dealer)
