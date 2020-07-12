@@ -7,6 +7,7 @@ Todo:
 """
 import random
 
+
 class Card:
 	"""
 	Class to represent a card for a deck.
@@ -16,7 +17,7 @@ class Card:
 		rank (str): Value of card from two through ace.
 	"""
 	suits = ["clubs", "diamonds", "hearts", "spades"]
-	ranks = [None, "ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"]
+	ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"]
 
 	def __init__(self, suit=None, rank=None):
 		"""
@@ -57,7 +58,60 @@ class Card:
 			rank (str): Value of card from two through ace, randomly chosen.
 
 		"""
-		return random.choice(Card.ranks[1:])
+		return random.choice(Card.ranks)
+
+
+class Deck:
+	"""
+	Uses Card class to construct deck object.
+
+	Attributes:
+		decks (int): Number of decks of cards.
+	"""
+
+	def __init__(self, decks=8):
+		"""
+		Constructs attributes of deck object.
+
+		Args:
+			decks (int): Number of decks of cards.
+		"""
+		self.decks = decks
+		self.card_stack = self.build_stack()
+		self.shuffle()
+
+	def build_stack(self):
+		"""
+		Builds card_stack based on number of decks input.
+
+		Returns:
+			card_stack (list)
+		"""
+		card_stack = []
+		for _ in range(self.decks):
+			for suit in Card.suits:
+				for rank in Card.ranks:
+					card_stack.append(Card(rank=rank, suit=suit))
+		return card_stack
+
+	def shuffle(self):
+		"""
+		Shuffles card_stack.
+
+		Returns:
+			None
+		"""
+		random.shuffle(self.card_stack)
+
+	def print_stack(self):
+		"""
+		Prints card_stack contents.
+
+		Returns:
+			None
+		"""
+		for card in self.card_stack:
+			print(card)
 
 
 class Player:
@@ -82,21 +136,13 @@ class Player:
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
 		self.hand = hand if hand is not None else False
-# if not self.dealer:
-# 	if chips is not None:
-# 		self.chips = chips
-# 	else:
-# 		self.chips = 0
 
 
 def main():
 	"""Executes Blackjack game and concludes run."""
 
-	card1 = Card(rank="422",suit="diamonds")
-	print(card1)
-
-	player1 = Player()
-	print(player1.chips, player1.dealer)
+	deck1 = Deck(decks=1)
+	deck1.print_stack()
 
 
 if __name__ == '__main__':
