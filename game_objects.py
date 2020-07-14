@@ -103,6 +103,23 @@ class Deck:
 		"""
 		random.shuffle(self.card_stack)
 
+	def deal_card(self):
+		"""
+		Removes a card from the top off the deck.
+
+		Returns:
+			card (str): Card removed from deck.
+		"""
+		return self.card_stack.pop()
+
+	def remaining_cards(self):
+		"""
+		Shows how many card are left in card_stack.
+		Returns:
+			int : Number of cards in card_stack
+		"""
+		return len(self.card_stack)
+
 	def print_stack(self):
 		"""
 		Prints card_stack contents.
@@ -124,7 +141,7 @@ class Player:
 		hand: Cards that player possesses.
 	"""
 
-	def __init__(self, dealer=None, chips=50_000, hand=None):
+	def __init__(self, dealer=None, chips=50_000, hand=None, name="Player"):
 		"""
 		Constructs attributes of player object.
 
@@ -135,14 +152,37 @@ class Player:
 		"""
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
-		self.hand = hand if hand is not None else False
+		self.hand = hand if hand is not None else []
+		self.name = "Dealer" if dealer else name
+
+	def print_hand(self):
+		"""
+		Prints hand contents.
+
+		Returns:
+			None
+		"""
+		for counter, card in enumerate(self.hand, 1):
+			print()
+			print(f"{self.name} card {counter}: ")
+			if self.dealer and counter == 1:
+				print("Hidden Dealer card")
+			else:
+				print(card)
 
 
 def main():
 	"""Executes Blackjack game and concludes run."""
 
-	deck1 = Deck(decks=1)
+	deck1 = Deck(decks=2)
 	deck1.print_stack()
+
+	print("---------")
+	print(deck1.deal_card())
+	deck1.deal_card()
+	print("---------")
+	deck1.print_stack()
+	print(deck1.remaining_cards())
 
 
 if __name__ == '__main__':
