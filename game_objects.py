@@ -16,8 +16,8 @@ class Card:
 		suit (str): One of four suits.
 		rank (str): Value of card from two through ace.
 	"""
-	suits = ["clubs", "diamonds", "hearts", "spades"]
-	ranks = ["ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"]
+	suits = ["Clubs", "Diamonds", "Hearts", "Spades"]
+	ranks = [None, "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
 
 	def __init__(self, suit=None, rank=None):
 		"""
@@ -30,13 +30,30 @@ class Card:
 		# random_suit/rank is DANGEROUS. Needs fix.
 		self.suit = suit if suit is not None and suit in self.suits else self.random_suit()
 		self.rank = rank if rank is not None and rank in self.ranks else self.random_rank()
+		self.ace = True if self.rank == "Ace" else False
 
 	def __str__(self):
 		"""
+
 		Returns:
 			str: Readable version of card.
 		"""
 		return (self.rank + " of " + self.suit)
+
+	def rank_value(self):
+		"""
+		Converts rank to blackjack values.
+
+		Returns:
+			int : Value of rank.
+		"""
+		rank_val = Card.ranks.index(self.rank)
+		if self.ace:
+			return 11
+		elif rank_val <= 10:
+			return rank_val
+		else:
+			return 10
 
 	@staticmethod
 	def random_suit():
@@ -58,7 +75,7 @@ class Card:
 			rank (str): Value of card from two through ace, randomly chosen.
 
 		"""
-		return random.choice(Card.ranks)
+		return random.choice(Card.ranks[1:])
 
 
 class Deck:
@@ -78,6 +95,7 @@ class Deck:
 		"""
 		self.decks = decks
 		self.card_stack = self.build_stack()
+		self.STACK_COUNT = self.remaining_cards()
 		self.shuffle()
 
 	def build_stack(self):
@@ -120,6 +138,22 @@ class Deck:
 		"""
 		return len(self.card_stack)
 
+	def shuffle_check(self, shuffle_percent):
+		"""
+		Checks if card_stack has below a specified percentage of cards left.
+
+		Args:
+			shuffle_percent (float): When card_stack has more than this percent of cards missing, shuffle.
+		Returns:
+			None
+		"""
+		percent_left = 1 - self.remaining_cards() / self.STACK_COUNT
+		if percent_left > shuffle_percent:
+			self.card_stack = self.build_stack()
+			self.shuffle()
+			print()
+			print("Shuffling. . . ")
+
 	def print_stack(self):
 		"""
 		Prints card_stack contents.
@@ -152,23 +186,119 @@ class Player:
 		"""
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
-		self.hand = hand if hand is not None else []
+		self.hand = hand if hand is not None else []  # Filled with Card objects
 		self.name = "Dealer" if dealer else name
+		self.bet = None
 
-	def print_hand(self):
+	def draw_card(self, deck):
+		"""
+		Draws card from deck and adds to hand.
+
+		Args:
+			deck (object): From Deck class.
+
+		Returns:
+			None
+		"""
+		card = deck.deal_card()
+		self.hand.append(card)
+
+	def get_bet(self):
+		"""
+		Get user input, only accepts integers. Checks remaining chips
+
+		Returns:
+			int : Valid bet.
+		"""
+		while True:
+			try:
+				print()
+				print(f"{self.name}, you have {self.chips} chips.")
+				bet = int(input("Place your bet: "))
+			except ValueError:
+				print("Must be a whole number! Try again.")
+				continue
+			else:
+				if bet > self.chips:
+					print(f"Not enough chips remaining. Try again.")
+					continue
+				elif bet <= 0:
+					print(f"Invalid bet. Try again.")
+					continue
+				else:
+					self.bet = bet
+					self.chips -= bet
+					break
+
+	def get_move(self, deck):
+		"""
+		Get user input for move to play. Implements blackjack rules
+		Args:
+			deck (object): From Deck class.
+
+		Returns:
+			None
+		"""
+		# first_move = True
+		while True:
+			try:
+				print()
+				move_selection = int(input("Hit or Stand (1 or 3): "))
+			except ValueError:
+				print("Must be a whole number! Try again.")
+				continue
+			else:
+				if move_selection == 1:
+					print("Here's your card: ")
+					self.draw_card(deck)
+					return False
+				elif move_selection == 3:
+					print("Stand.")
+					return True
+				else:
+					print("Invalid input. Try again.")
+					continue
+
+	def hand_total(self):
+		total = 0
+		ace_count = 0
+		if self.hand:
+			for card in self.hand:
+				total += card.rank_value()
+				if card.ace:
+					ace_count += 1
+			while total > 21 and ace_count >= 1:
+				total -= 10
+				ace_count -= 1
+		return total
+
+	def print_hand(self, show_dealer=False):
 		"""
 		Prints hand contents.
 
 		Returns:
 			None
 		"""
-		for counter, card in enumerate(self.hand, 1):
-			print()
-			print(f"{self.name} card {counter}: ")
-			if self.dealer and counter == 1:
-				print("Hidden Dealer card")
+		print()
+		print(f"{self.name} cards: ")
+		if not self.dealer or show_dealer:
+			print(f"Total {self.hand_total()}")
+		print("--------------")
+		for dealt_cards, card in enumerate(self.hand, 1):
+			if self.dealer and dealt_cards == 1 and not show_dealer:
+				print("Hidden card")
 			else:
-				print(card)
+				print(card, f" ({card.rank_value()})")
+		print("--------------")
+
+	def reset_hand(self):
+		"""
+		Resets hand to empty list.
+
+		Returns:
+			None
+		"""
+		self.hand = []
 
 
 def main():
