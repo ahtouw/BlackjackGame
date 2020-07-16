@@ -21,7 +21,7 @@ class Card:
 
 	def __init__(self, suit=None, rank=None):
 		"""
-		Constructs attributes of card object.
+		Constructs attributes of Card object.
 
 		Args:
 			suit (str): One of four suits.
@@ -88,7 +88,7 @@ class Deck:
 
 	def __init__(self, decks=8):
 		"""
-		Constructs attributes of deck object.
+		Constructs attributes of Deck object.
 
 		Args:
 			decks (int): Number of decks of cards.
@@ -177,7 +177,7 @@ class Player:
 
 	def __init__(self, dealer=None, chips=50_000, hand=None, name="Player"):
 		"""
-		Constructs attributes of player object.
+		Constructs attributes of Player object.
 
 		Args:
 			dealer (bool): Specifies whether player is dealer.
