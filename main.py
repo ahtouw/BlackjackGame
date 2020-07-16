@@ -3,7 +3,6 @@
 Executes blackjack game.
 
 Todo:
-	* Create turn system
 	* Create betting system
 	* Create rule system
 """
@@ -16,36 +15,23 @@ def greeting_message():
 	print()
 
 
-def get_bet(player):
+def take_bets(player_list):
 	"""
-	Get user input, only accepts integers. Checks remaining chips
+	Takes bets for all players.
 
 	Args:
-		player (object): Created from Player class.
+		player_list (list): All active players.
+
 	Returns:
-		int : Valid bet.
+		None
 	"""
-	while True:
-		try:
-			print()
-			print(f"You have {player.chips} chips.")
-			userInput = int(input("Place your bet: "))
-		except ValueError:
-			print("Must be a whole number! Try again.")
-			continue
-		else:
-			if userInput > player.chips:
-				print(f"Not enough chips remaining. Try again.")
-				continue
-			elif userInput <= 0:
-				print(f"Invalid bet. Try again.")
-				continue
-			else:
-				return userInput
-				break
+	for player in player_list:
+		if not player.dealer:
+			player.get_bet()
+			print(f"Chips remaining: {player.chips}")
 
 
-def deal_hand(player_list, deck):
+def deal_hands(player_list, deck):
 	"""
 	Deals hand to all players.
 
@@ -55,12 +41,73 @@ def deal_hand(player_list, deck):
 
 	Returns:
 		None
-
 	"""
 	for card_num in range(1, 3):
 		for player in player_list:
-			card = deck.deal_card()
-			player.hand.append(card)
+			player.draw_card(deck)
+
+
+def take_turns(player_list, dealer, deck):
+	"""
+	Takes turn for all players including dealer
+
+	Args:
+		player_list (list): All active players.
+		dealer (object): dealer from player_list
+		deck (object): From Deck class.
+
+	Returns:
+		None
+	"""
+	for player in player_list:
+		if not player.dealer:
+			turn_over = False
+			loss = False
+			while not turn_over:
+				if player.hand_total() > 21:
+					loss = True
+					turn_over = True
+				player.print_hand()
+				dealer.print_hand()
+				turn_over = player.get_move(deck)
+
+	while dealer.hand_total() < 17:
+		dealer.draw_card(deck)
+		dealer.print_hand(show_dealer=True)
+	print()
+	print("|-----------------------------------|")
+	print("               Results               ")
+	print("|-----------------------------------|")
+	if dealer.hand_total() > 21:
+		print("\nBUST! House loses!\n")
+		return
+	for player in player_list:
+		player.print_hand(show_dealer=True)
+		if not player.dealer:
+			print()
+			if dealer.hand_total() > player.hand_total():
+				print(f"{player.name} loses.")
+			elif dealer.hand_total() == player.hand_total():
+				print("Push.")
+				player.chips += player.bet
+			else:
+				print(f"{player.name} wins!")
+				player.chips += player.bet * 2
+			print(f"{player.name} chips: {player.chips}")
+
+
+def clear_table(player_list):
+	"""
+	Resets hands of players
+
+	Args:
+		player_list (list): All active players.
+
+	Returns:
+		None
+	"""
+	for player in player_list:
+		player.reset_hand()
 
 
 def play_game():
@@ -70,22 +117,21 @@ def play_game():
 	Returns:
 		None
 	"""
-
 	player1 = Player(name="Frank")
 	dealer = Player(dealer=True)
 	player_list = [player1, dealer]
-	deck = Deck(decks=4)
+	deck = Deck(decks=1)
 
 	playing = True
 	greeting_message()
 	while playing:
-		bet = get_bet(player1)
-		player1.chips -= bet
-		print(f"Chips remaining: {player1.chips}")
-		deal_hand(player_list, deck)
-		for player in player_list:
-			player.print_hand()
+		take_bets(player_list)
+		deal_hands(player_list, deck)
+		take_turns(player_list, dealer, deck)
+		clear_table(player_list)
 
+		deck.shuffle_check(.70)
+		print("\nNext round starting. . .")
 		if input("\nPress 'x' to leave the table: ") == "x":
 			playing = False
 
