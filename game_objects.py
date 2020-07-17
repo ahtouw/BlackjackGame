@@ -4,6 +4,7 @@ Module for defining blackjack game objects.
 
 Todo:
 	* Fill in method functionality
+
 """
 import random
 
@@ -175,20 +176,23 @@ class Player:
 		hand: Cards that player possesses.
 	"""
 
-	def __init__(self, dealer=None, chips=50_000, hand=None, name="Player"):
+	def __init__(self, dealer=None, chips=50_000, hand=None, lost=None, name="Player"):
 		"""
 		Constructs attributes of Player object.
 
 		Args:
 			dealer (bool): Specifies whether player is dealer.
 			chips (int): Currency of game player can use to bet. None if dealer.
-			hand: Cards that player possesses.
+			hand (list): Cards that player possesses.
+			lost (bool): Whether the player lost the hand.
+			name (str): Name of player.
 		"""
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
 		self.hand = hand if hand is not None else []  # Filled with Card objects
 		self.name = "Dealer" if dealer else name
 		self.bet = None
+		self.lost = lost if lost is not None else False
 
 	def draw_card(self, deck):
 		"""
@@ -237,7 +241,7 @@ class Player:
 			deck (object): From Deck class.
 
 		Returns:
-			None
+			bool : Whether or not player's turn ends.
 		"""
 		# first_move = True
 		while True:
@@ -251,7 +255,11 @@ class Player:
 				if move_selection == 1:
 					print("Here's your card: ")
 					self.draw_card(deck)
-					return False
+					if self.hand_total() > 21:
+						self.lost = True
+						return True
+					else:
+						return False
 				elif move_selection == 3:
 					print("Stand.")
 					return True

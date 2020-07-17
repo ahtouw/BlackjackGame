@@ -3,7 +3,6 @@
 Executes blackjack game.
 
 Todo:
-	* Create betting system
 	* Create rule system
 """
 from blackjack import Blackjack

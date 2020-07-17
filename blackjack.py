@@ -1,5 +1,11 @@
+# -*- coding: utf-8 -*-
 """
 Module for creating blackjack game.
+
+Todo:
+	* Fix rule system, winning/losing
+	* Add double, split functions
+	* Add Blackjack deal
 """
 from game_objects import Deck, Player
 
@@ -22,7 +28,7 @@ class Blackjack:
 			player_list (list): All active players.
 			deck (object): From Deck class.
 		"""
-		self.player_list = [Player(name="Frank")]
+		self.player_list = [Player(name="Frank"), Player(name="Jane")]
 		self.dealer = Player(dealer=True)
 		self.deck = Deck(decks=1)
 
@@ -45,12 +51,6 @@ class Blackjack:
 			print("\nNext round starting. . .")
 			if input("\nPress 'x' to leave the table: ") == "x":
 				playing = False
-
-	@staticmethod
-	def greeting_message():
-		print()
-		print("Hey there! Welcome to Blackjack.")
-		print()
 
 	def take_bets(self):
 		"""
@@ -84,31 +84,35 @@ class Blackjack:
 		"""
 		for player in self.player_list:
 			turn_over = False
-			loss = False
 			while not turn_over:
-				if player.hand_total() > 21:
-					loss = True
-					turn_over = True
 				player.print_hand()
-				self.dealer.print_hand()
+				self.dealer.print_hand(show_dealer=False)
 				turn_over = player.get_move(self.deck)
 
-		while self.dealer.hand_total() < 17:
-			self.dealer.draw_card(self.deck)
-			self.dealer.print_hand(show_dealer=True)
-		print()
-		print("|-----------------------------------|")
-		print("               Results               ")
-		print("|-----------------------------------|")
+		self.results_message()
 
+		while self.dealer.hand_total() < 17:
+			self.dealer.print_hand(show_dealer=True)
+			self.dealer.draw_card(self.deck)
 		self.dealer.print_hand(show_dealer=True)
-		if self.dealer.hand_total() > 21:
-			print("\nBUST! House loses!\n")
-			return
+
+		self.find_winner()
+
+	def find_winner(self):
+		"""
+		Evaluates if player or dealer won hand.
+
+		Returns:
+			None
+		"""
 		for player in self.player_list:
 			player.print_hand()
 			print()
-			if self.dealer.hand_total() > player.hand_total():
+			if self.dealer.hand_total() > 21 and not player.lost:
+				print("BUST! House loses!")
+				print(f"{player.name} wins!")
+				player.chips += player.bet * 2
+			elif self.dealer.hand_total() > player.hand_total() or player.lost:
 				print(f"{player.name} loses.")
 			elif self.dealer.hand_total() == player.hand_total():
 				print("Push.")
@@ -127,4 +131,18 @@ class Blackjack:
 		"""
 		for player in self.player_list:
 			player.reset_hand()
+			player.lost = False
 		self.dealer.reset_hand()
+
+	@staticmethod
+	def greeting_message():
+		print()
+		print("Hey there! Welcome to Blackjack.")
+		print()
+
+	@staticmethod
+	def results_message():
+		print()
+		print("|-----------------------------------|")
+		print("               Results               ")
+		print("|-----------------------------------|")
