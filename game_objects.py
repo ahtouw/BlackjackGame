@@ -39,7 +39,7 @@ class Card:
 		Returns:
 			str: Readable version of card.
 		"""
-		return (self.rank + " of " + self.suit)
+		return self.rank + " of " + self.suit
 
 	def rank_value(self):
 		"""
@@ -190,9 +190,9 @@ class Player:
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
 		self.hand = hand if hand is not None else []  # Filled with Card objects
+		self.lost = lost if lost is not None else False
 		self.name = "Dealer" if dealer else name
 		self.bet = None
-		self.lost = lost if lost is not None else False
 
 	def draw_card(self, deck):
 		"""
@@ -234,19 +234,37 @@ class Player:
 					self.chips -= bet
 					break
 
+	def has_blackjack(self):
+		"""
+		Checks if a two-card blackjack was dealt
+
+		Returns:
+			bool : True if blackjack dealt.
+		"""
+		if len(self.hand) == 2 and self.hand_total() == 21:
+			return True
+		else:
+			return False
+
 	def get_move(self, deck):
 		"""
-		Get user input for move to play. Implements blackjack rules
+		Get user input for move to play. Implements blackjack rules.
+
+		Notes:
+			2-card BJ already accounted for in Blackjack method 'take_turns'.
+
 		Args:
 			deck (object): From Deck class.
 
 		Returns:
 			bool : Whether or not player's turn ends.
 		"""
-		# first_move = True
+		first_move = True
 		while True:
 			try:
 				print()
+				# if first_move and self.hand[0].rank == self.hand[1].rank:
+				# 	move_selection = int(input("Hit or Stand (1 or 3): "))
 				move_selection = int(input("Hit or Stand (1 or 3): "))
 			except ValueError:
 				print("Must be a whole number! Try again.")
