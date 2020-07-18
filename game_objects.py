@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Module for defining blackjack game objects.
-
-Todo:
-	* Fill in method functionality
-
 """
 import random
+from math import floor
 
 
 class Card:
@@ -18,7 +15,7 @@ class Card:
 		rank (str): Value of card from two through ace.
 	"""
 	suits = ["Clubs", "Diamonds", "Hearts", "Spades"]
-	ranks = [None, "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"]
+	ranks = [None, "Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Jack", "Queen", "King"]
 
 	def __init__(self, suit=None, rank=None):
 		"""
@@ -176,7 +173,7 @@ class Player:
 		hand: Cards that player possesses.
 	"""
 
-	def __init__(self, dealer=None, chips=50_000, hand=None, lost=None, name="Player"):
+	def __init__(self, dealer=None, chips=50_000, hand=None, name="Player"):
 		"""
 		Constructs attributes of Player object.
 
@@ -184,28 +181,47 @@ class Player:
 			dealer (bool): Specifies whether player is dealer.
 			chips (int): Currency of game player can use to bet. None if dealer.
 			hand (list): Cards that player possesses.
-			lost (bool): Whether the player lost the hand.
 			name (str): Name of player.
 		"""
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
 		self.hand = hand if hand is not None else []  # Filled with Card objects
-		self.lost = lost if lost is not None else False
 		self.name = "Dealer" if dealer else name
 		self.bet = None
+		self.score = None
 
 	def draw_card(self, deck):
 		"""
 		Draws card from deck and adds to hand.
 
 		Args:
-			deck (object): From Deck class.
+			deck (Deck): From Deck class.
 
 		Returns:
 			None
 		"""
 		card = deck.deal_card()
 		self.hand.append(card)
+		self.score = self.set_score()
+
+	def set_score(self):
+		"""
+		Should ONLY be used in draw_card method.
+
+		Returns:
+			int : Score of hand.
+		"""
+		total = 0
+		ace_count = 0
+		if self.hand:
+			for card in self.hand:
+				total += card.rank_value()
+				if card.ace:
+					ace_count += 1
+			while total > 21 and ace_count >= 1:
+				total -= 10
+				ace_count -= 1
+		return total
 
 	def get_bet(self):
 		"""
@@ -241,7 +257,7 @@ class Player:
 		Returns:
 			bool : True if blackjack dealt.
 		"""
-		if len(self.hand) == 2 and self.hand_total() == 21:
+		if len(self.hand) == 2 and self.score == 21:
 			return True
 		else:
 			return False
@@ -254,16 +270,15 @@ class Player:
 			2-card BJ already accounted for in Blackjack method 'take_turns'.
 
 		Args:
-			deck (object): From Deck class.
+			deck (Deck): From Deck class.
 
 		Returns:
 			bool : Whether or not player's turn ends.
 		"""
-		first_move = True
 		while True:
 			try:
 				print()
-				# if first_move and self.hand[0].rank == self.hand[1].rank:
+				# if len(self.hand) and self.hand[0].rank == self.hand[1].rank:
 				# 	move_selection = int(input("Hit or Stand (1 or 3): "))
 				move_selection = int(input("Hit or Stand (1 or 3): "))
 			except ValueError:
@@ -271,10 +286,9 @@ class Player:
 				continue
 			else:
 				if move_selection == 1:
-					print("Here's your card: ")
 					self.draw_card(deck)
-					if self.hand_total() > 21:
-						self.lost = True
+					print("Here's your card: ")
+					if self.score > 21:
 						return True
 					else:
 						return False
@@ -285,19 +299,6 @@ class Player:
 					print("Invalid input. Try again.")
 					continue
 
-	def hand_total(self):
-		total = 0
-		ace_count = 0
-		if self.hand:
-			for card in self.hand:
-				total += card.rank_value()
-				if card.ace:
-					ace_count += 1
-			while total > 21 and ace_count >= 1:
-				total -= 10
-				ace_count -= 1
-		return total
-
 	def print_hand(self, show_dealer=False):
 		"""
 		Prints hand contents.
@@ -305,17 +306,38 @@ class Player:
 		Returns:
 			None
 		"""
-		print()
-		print(f"{self.name} cards: ")
+		print(f"\n{self.name}'s cards: ")
 		if not self.dealer or show_dealer:
-			print(f"Total {self.hand_total()}")
-		print("--------------")
+			print(f"Total {self.score}")
+		print("---------------------------")
 		for dealt_cards, card in enumerate(self.hand, 1):
 			if self.dealer and dealt_cards == 1 and not show_dealer:
 				print("Hidden card")
 			else:
-				print(card, f" ({card.rank_value()})")
-		print("--------------")
+				if card.ace:
+					print(f"{str(card):<20} (1/11)")
+				else:
+					print(f"{str(card):<20} ({card.rank_value()})")
+		print("---------------------------")
+
+	def award_chips(self, result):
+		"""
+		Uses blackjack results to alter chips
+
+		Args:
+			result (str): Result of blackjack hand.
+
+		Returns:
+			None
+		"""
+		if result == "blackjack":
+			self.chips += floor(self.bet * 2.5)
+		elif result == "win":
+			self.chips += self.bet * 2
+		elif result == "push":
+			self.chips += self.bet
+		else:
+			raise ValueError(f"Input '{result}' invalid, expected 'blackjack', 'win', or 'push'.")
 
 	def reset_hand(self):
 		"""

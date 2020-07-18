@@ -2,8 +2,6 @@
 """
 Executes blackjack game.
 
-Todo:
-	* Create rule system
 """
 from blackjack import Blackjack
 

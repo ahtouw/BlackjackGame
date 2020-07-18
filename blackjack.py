@@ -3,12 +3,8 @@
 Module for creating blackjack game.
 
 Todo:
-	* Fix rule system, winning/losing
 	* Add double, split functions
-	* Add Blackjack deal
 """
-from math import floor
-
 from game_objects import Deck, Player
 
 
@@ -25,14 +21,10 @@ class Blackjack:
 	def __init__(self):
 		"""
 		Constructs attributes of Blackjack object.
-
-		Args:
-			player_list (list): All active players.
-			deck (object): From Deck class.
 		"""
 		self.player_list = [Player(name="Frank"), Player(name="Jane")]
 		self.dealer = Player(dealer=True)
-		self.deck = Deck(decks=1)
+		self.deck = Deck(decks=4)
 
 	def run(self):
 		"""
@@ -42,16 +34,17 @@ class Blackjack:
 			None
 		"""
 		playing = True
-		self.game_message("Welcome")
+		self.game_message("Welcome to Blackjack!")
 		while playing:
+			self.game_message("Place your bets")
 			self.take_bets()
 			self.deal_hands()
 			self.take_turns()
+			self.get_results()
 			self.clear_table()
 
 			self.deck.shuffle_check(.70)
-			self.game_message("Play again!")
-			print("\nNext round starting. . .")
+			self.game_message("Continue?")
 			if input("\nPress 'x' to leave the table: ") == "x":
 				playing = False
 
@@ -87,57 +80,53 @@ class Blackjack:
 		"""
 		for player in self.player_list:
 			turn_over = False
-			self.game_message(player.name + "'s turn")
+			self.game_message(f"{player.name}'s turn")
 			player.print_hand()
 			while not turn_over:
 				self.dealer.print_hand(show_dealer=False)
-				if player.has_blackjack() and not self.dealer.has_blackjack():
-					self.find_winner(blackjack_winner=player)
+				if player.has_blackjack():
 					break
 				turn_over = player.get_move(self.deck)
 				player.print_hand()
 
-		self.game_message("Results")
-		while self.dealer.hand_total() < 17:
+		self.game_message(f"{self.dealer.name}'s turn")
+		while self.dealer.score < 17:
 			self.dealer.print_hand(show_dealer=True)
+			print("Draw card.")
 			self.dealer.draw_card(self.deck)
 		self.dealer.print_hand(show_dealer=True)
 
-		self.find_winner()
-
-	def find_winner(self, blackjack_winner=None):
+	def get_results(self):
 		"""
 		Evaluates if player or dealer won hand.
 
-		Args:
-			blackjack_winner (object): Player with blackjack
 		Returns:
 			None
 		"""
-		if blackjack_winner:
+		self.game_message("Results")
+		self.dealer.print_hand(show_dealer=True)
+		for player in self.player_list:
+			player.print_hand()
 			print()
-			print("-- ---- BLACKJACK WINNER!!! ---- --")
-			blackjack_winner.chips += floor(blackjack_winner.bet * 2.5)
-			print(f"{blackjack_winner.name} chips: {blackjack_winner.chips}")
-		else:
-			for player in self.player_list:
-				if player.has_blackjack():
-					continue
-				player.print_hand()
-				print()
-				if self.dealer.hand_total() > 21 and not player.lost:
-					print("BUST! House loses!")
-					print(f"{player.name} wins!")
-					player.chips += player.bet * 2
-				elif self.dealer.hand_total() > player.hand_total() or player.lost:
+			if player.has_blackjack() and self.dealer.score != 21:
+				print("---- BLACKJACK WINNER!!! ----")
+				player.award_chips("blackjack")
+			elif player.score > 21:
+				print(f"Player bust, {player.name} loses.")
+			elif self.dealer.score > 21:
+				print("HOUSE BUST! House loses!")
+				print(f"{player.name} wins!")
+				player.award_chips("win")
+			else:
+				if self.dealer.score > player.score:
 					print(f"{player.name} loses.")
-				elif self.dealer.hand_total() == player.hand_total():
+				elif self.dealer.score == player.score:
 					print("Push.")
-					player.chips += player.bet
+					player.award_chips("push")
 				else:
 					print(f"{player.name} wins!")
-					player.chips += player.bet * 2
-				print(f"{player.name} chips: {player.chips}")
+					player.award_chips("win")
+			print(f"{player.name}'s chips: {player.chips}")
 
 	def clear_table(self):
 		"""
@@ -148,8 +137,6 @@ class Blackjack:
 		"""
 		for player in self.player_list:
 			player.reset_hand()
-			player.lost = False
-			player.blackjack = False
 		self.dealer.reset_hand()
 
 	@staticmethod
