@@ -201,6 +201,7 @@ class Hand:
 			int : length of hand.
 		"""
 		self.size = len(self.hand)
+		return len(self.hand)
 
 	def draw_card(self, deck):
 		"""
@@ -217,9 +218,16 @@ class Hand:
 		self.set_size()
 		self.score = self.set_score()
 
-	def deal_hand(self, deck, hand_size):
-		while len(self.hand) < hand_size:
-			self.draw_card(deck)
+	def remove_card(self):
+		"""
+		Allows for safe hand 'pop'. Used in 'split_hand' method in Person class.
+
+		Returns:
+			card (Card): Removed card from hand.
+		"""
+		card = self.hand.pop()
+		self.set_size()
+		return card
 
 	def set_score(self):
 		"""
@@ -240,6 +248,10 @@ class Hand:
 				ace_count -= 1
 		return total
 
+	def deal_hand(self, deck, hand_size):
+		while self.size < hand_size:
+			self.draw_card(deck)
+
 	def has_blackjack(self):
 		"""
 		Checks if a two-card blackjack was dealt
@@ -247,10 +259,7 @@ class Hand:
 		Returns:
 			bool : True if blackjack dealt.
 		"""
-		if len(self.hand) == 2 and self.score == 21:
-			return True
-		else:
-			return False
+		return len(self.hand) == 2 and self.score == 21
 
 	def print_hand(self, show_dealer=False):
 		"""
@@ -293,24 +302,21 @@ class Player:
 	Attributes:
 		dealer (bool): Specifies whether player is dealer.
 		chips (int): Currency of game player can use to bet. None if dealer.
-		hands (list): Hands that player possesses.
 	"""
 
-	def __init__(self, dealer=None, chips=50_000, hands=None, name="Player"):
+	def __init__(self, dealer=None, chips=50_000, name="Player"):
 		"""
 		Constructs attributes of Player object.
 
 		Args:
 			dealer (bool): Specifies whether player is dealer.
-			chips (int): Currency of game player can use to bet. None if dealer.
-			hands (list): Hands that player possesses.
-			name (str): Name of player.
+			chips (int): Currency of game player can use to bet. None if dealer.			name (str): Name of player.
 		"""
 		self.name = "Dealer" if dealer else name
 		self.dealer = dealer if dealer is not None else False
 		self.chips = chips if not self.dealer else None
-		self.hands = hands if hands is not None else [Hand(self.name, self.dealer)]  # Filled with Card objects
-		self.current_hand = self.hands[0]
+		self.current_hand = Hand(self.name, self.dealer)
+		self.hands = [self.current_hand]  # Filled with Card objects
 		self.bet = None
 
 	def get_bet(self):
@@ -385,16 +391,13 @@ class Player:
 				if move_selection == 1:
 					self.current_hand.draw_card(deck)
 					print("Here's your card: ")
-					if self.current_hand.score > 21:
-						return turn_over
-					else:
-						return not turn_over
+					return self.current_hand.score > 21
 				elif move_selection == 3:
 					print("Stand.")
 					return turn_over
 				elif move_selection == 5 and double:
-					self.place_bet()
 					self.current_hand.double_down = True
+					self.place_bet()
 					print(f"Chips remaining: {self.chips}")
 					self.current_hand.draw_card(deck)
 					print("Here's your card: ")
@@ -414,9 +417,9 @@ class Player:
 			None
 		"""
 		self.place_bet()
-		split_hand = Hand(name=self.current_hand.name, hand=[self.current_hand.hand.pop()])
-		split_hand.draw_card(deck)
-		self.current_hand.draw_card(deck)
+		split_hand = Hand(name=self.current_hand.name, hand=[self.current_hand.remove_card()])
+		split_hand.deal_hand(deck, 2)
+		self.current_hand.deal_hand(deck, 2)
 		self.hands.append(split_hand)
 		for _ in range(0, 2):
 			turn_over = False

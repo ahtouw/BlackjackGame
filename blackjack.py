@@ -67,6 +67,7 @@ class Blackjack:
 			None
 		"""
 		for player in self.player_list:
+			print(player.current_hand.size)
 			player.current_hand.deal_hand(self.deck, 2)
 		self.dealer.current_hand.deal_hand(self.deck, 2)
 
@@ -111,19 +112,19 @@ class Blackjack:
 					print("---- BLACKJACK WINNER!!! ----")
 					player.award_chips("blackjack")
 				elif player.current_hand.score > 21:
-					print(f"Player bust, {player.name} loses.")
+					print(f"Player bust, {player.name} hand loses.")
 				elif self.dealer.current_hand.score > 21:
 					print("HOUSE BUST! House loses!")
-					print(f"{player.name} wins!")
+					print(f"{player.name} hand wins!")
 					player.award_chips("win")
 				else:
 					if self.dealer.current_hand.score > player.current_hand.score:
-						print(f"{player.name} loses.")
+						print(f"{player.name} hand loses.")
 					elif self.dealer.current_hand.score == player.current_hand.score:
 						print("Push.")
 						player.award_chips("push")
 					else:
-						print(f"{player.name} wins!")
+						print(f"{player.name} hand wins!")
 						player.award_chips("win")
 			print(f"{player.name}'s chips: {player.chips}")
 
